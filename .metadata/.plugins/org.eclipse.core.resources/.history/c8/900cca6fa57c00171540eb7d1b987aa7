@@ -1146,7 +1146,7 @@ public class RosyLambdaFulfillment implements RequestHandler<Object, Object> {
 
 	private DialogActionElicitSlot getShowOrderURLDA(String orderURL) {
 
-		String messageText = "OK, done! Verify your info and click this link to checkout:  " + orderURL;
+		String messageText = "OK, done! Click this link to checkout:  " + orderURL;
 
 		DialogActionElicitSlot da = new DialogActionElicitSlot();
 

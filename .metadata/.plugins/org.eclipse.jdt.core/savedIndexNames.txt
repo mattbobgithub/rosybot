@@ -15,7 +15,6 @@ INDEX VERSION 1.127+C:\workspace-aws\.metadata\.plugins\org.eclipse.jdt.core
 556003961.index
 1080596427.index
 2169598451.index
-4164767549.index
 3535078041.index
 474282249.index
 2475401368.index
