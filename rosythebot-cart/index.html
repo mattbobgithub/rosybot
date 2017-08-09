@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html>
+   <head>
+      <!-- Required meta tags-->
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
+      <meta name="apple-mobile-web-app-capable" content="yes">
+      <meta name="apple-mobile-web-app-status-bar-style" content="black">
+      <link rel="apple-touch-icon" href="http://placehold.it/80x80/?text=ICON" />
+      <meta name="mobile-web-app-capable" content="yes">
+      <link rel="shortcut icon" sizes="196x196" href="http://placehold.it/196x196/?text=ICON">
+      <link rel="shortcut icon" sizes="128x128" href="http://placehold.it/128x128/?text=ICON">
+      <!-- Color theme for statusbar -->
+      <meta name="theme-color" content="#000000">
+      <!-- Your app title -->
+      <title>BizTrendz Appointment - HTML Responsive Mobile App</title>
+      <link href="https://fonts.googleapis.com/css?family=Montserrat:400,700|Playfair+Display:400,700" rel="stylesheet">
+      <!-- Path to Framework7 Library CSS, Material Theme -->
+      <link rel="stylesheet" href="css/framework7.material.min.css">
+      <link rel="stylesheet" href="css/framework7.3dpanels.min.css">
+      <link rel="stylesheet" href="css/framework7.indexed-list.min.css">
+      <!-- Path to Framework7 color related styles, Material Theme -->
+      <link rel="stylesheet" href="css/framework7.material.colors.min.css">
+      <!-- Slick Carousel -->
+      <link rel="stylesheet" type="text/css" href="css/slick.css"/>
+      <link rel="stylesheet" type="text/css" href="css/slick-theme.css"/>
+      <!-- Font Awesome -->
+      <link rel="stylesheet" href="css/font-awesome.min.css" />
+      <link rel="stylesheet" href="css/font-awesome.css" />
+      <!-- UpScroller -->
+      <link rel="stylesheet" href="css/framework7.upscroller.min.css">
+      <!-- Path to your custom app styles-->
+      <link rel="stylesheet" href="font/flaticon.css">
+      <link rel="stylesheet" href="shop-cart/flaticon.css">
+      <!--style-->
+      <link rel="stylesheet" href="css/base.css">
+      <link rel="stylesheet" href="css/my-app.css">
+   </head>
+   <body class="theme-black">
+      <!-- Status bar overlay for fullscreen mode-->
+      <div class="statusbar-overlay"></div>
+      <!-- Panels overlay-->
+      <div class="panel-overlay"></div>  
+      <!-- /Right Panel -->
+      <!-- Views -->
+      <div class="views">
+         <!-- Your main view, should have "view-main" class -->
+         <div class="view view-main">
+            <!-- Pages container, because we use fixed navbar and toolbar, it has additional appropriate classes-->
+ <div class="pages">
+   <!-- Page, data-page contains page name-->
+   <div data-page="shop-list" class="page">
+      <!-- We don't need full layout here, because this page will be parsed with Ajax-->
+      <!-- Top Navbar-->
+      <div class="navbar">
+         <div class="navbar-inner" style="padding-bottom: 10px">           
+            <div class="center sliding nv-checkout"><img height=40px width=40px src="images/robot2.png">Rosy The Bot - Checkout
+        </div>         
+         </div>
+      </div>
+      <!-- Scrollable page content-->
+      <div class="page-content">
+         <div class="content-block">
+            <div class="content-block-inner">
+               <div class="cartbox margin-top-20 cartbox-border">
+       <!--           <div class="cart-heading-1 ">
+                     <h2><i class="fa fa-star-o"></i> Checkout</h2>
+                  </div>-->
+                  <div class="check-contenttext">
+                     <div class="list-block accordion-list">
+                        <ul>
+                           
+                           <li class="accordion-item">
+                              <a href="" class="item-link item-content">
+                                 <div class="item-inner">
+                                    <div class="item-title"><span>1</span> Confirm Shipping/Order information</div>
+                                 </div>
+                              </a>
+                              <div class="accordion-item-content">
+                                 <div class="accordionbox">
+                                 <h5>Shipping Address</h5>
+                                       <div class="inputbox">
+                                          BootExpert<br/>
+                                          Bonosrie<br/>
+                                          D- Block<br/>
+                                          Dkaka, 1201<br/>
+                                          Bangladesh<br/>
+                                          T: +8800 879 9876 <br/>
+                                          <a href="#">Edit Shipping Address</a>
+                                       </div>                                
+                                 </div>
+                              </div>
+                       
+                              <div class="accordion-item-content">
+                                 <div class="accordinbox">
+                                    <table>
+                                       <tr>
+                                          <th>Product Name</th>
+                                          <th class="text-center">Price</th>
+                                          <th class="text-center">Qty</th>
+                                          <th class="text-center">Subtotal</th>
+                                       </tr>
+                                       <tr>
+                                          <td>
+                                             RosyTheBot daisy bouquet <br>
+                                          </td>
+                                          <td class="text-center">$72.00</td>
+                                          <td class="text-center">1</td>
+                                          <td class="text-center">$72.00</td>
+                                       </tr>
+                             
+                                       <tfoot>
+                                          <tr>
+                                             <td colspan="3">Subtotal </td>
+                                             <td colspan="1">$72.00</td>
+                                          </tr>
+                                          <tr>
+                                             <td colspan="3">Shipping &amp; Handling (Flat Rate - Fixed</td>
+                                             <td colspan="1">$12.95</td>
+                                          </tr>
+                                          <tr>
+                                             <td colspan="3"><b>Grand Total</b></td>
+                                             <td colspan="1"><b>$84.95</b></td>
+                                          </tr>
+                                       </tfoot>
+                                    </table>
+                                 </div>
+                               
+                              </div>
+                           </li>
+                            <li class="accordion-item">
+                              <a href="" class="item-link item-content">
+                                 <div class="item-inner">
+                                    <div class="item-title"><span>2</span> Billing/Payment information</div>
+                                 </div>
+                              </a>
+                              <div class="accordion-item-content">
+                                 <div class="accordionbox">
+                                    <form action="#">
+                                   
+                                   
+                                   
+                <!-- Address form -->
+         
+                <h5>Billing Address</h5>
+         
+                <!-- full-name input-->
+                <div class="control-group">
+                    <label class="control-label">Full Name on Card</label>
+                    <div class="controls">
+                        <input id="full-name" name="full-name" type="text" placeholder="full name"
+                        class="input-xlarge">
+                        <p class="help-block"></p>
+                    </div>
+                </div>
+                <!-- address-line1 input-->
+                <div class="control-group">
+                    <label class="control-label">Address Line 1</label>
+                    <div class="controls">
+                        <input id="address-line1" name="address-line1" type="text" placeholder="address line 1"
+                        class="input-xlarge">
+                        <p class="help-block">Street address, P.O. box, company name, c/o</p>
+                    </div>
+                </div>
+                <!-- address-line2 input-->
+                <div class="control-group">
+                    <label class="control-label">Address Line 2</label>
+                    <div class="controls">
+                        <input id="address-line2" name="address-line2" type="text" placeholder="address line 2"
+                        class="input-xlarge">
+                        <p class="help-block">Apartment, suite , unit, building, floor, etc.</p>
+                    </div>
+                </div>
+                <!-- city input-->
+                <div class="control-group">
+                    <label class="control-label">City / Town</label>
+                    <div class="controls">
+                        <input id="city" name="city" type="text" placeholder="city" class="input-xlarge">
+                        <p class="help-block"></p>
+                    </div>
+                </div>
+                <!-- region input-->
+                <div class="control-group">
+                    <label class="control-label">State / Province / Region</label>
+                    <div class="controls">
+                        <input id="region" name="region" type="text" placeholder="state / province / region"
+                        class="input-xlarge">
+                        <p class="help-block"></p>
+                    </div>
+                </div>
+                <!-- postal-code input-->
+                <div class="control-group">
+                    <label class="control-label">Zip / Postal Code</label>
+                    <div class="controls">
+                        <input id="postal-code" name="postal-code" type="text" placeholder="zip or postal code"
+                        class="input-xlarge">
+                        <p class="help-block"></p>
+                    </div>
+                </div>
+                <!-- country select -->
+                <div class="control-group">
+                    <label class="control-label">Country</label>
+                    <div class="controls">
+                        <select id="country" name="country" class="input-xlarge">
+                            <option value="US">United States</option>                      
+                        </select>
+                    </div>
+                </div>
+           
+                                   
+                                   
+                                   
+                                   
+                                   
+                                       
+                                       
+                                       <div class="inputbox">
+                                          <label>Credit Card Type <span>*</span></label>
+                                          <select>
+                                             <option>--Please Select--</option>
+                                             <option>American Express</option>
+                                             <option>Visa</option>
+                                             <option>MasterCard</option>
+                                             <option>Discover</option>
+                                          </select>
+                                       </div>
+                                       <div class="inputbox">
+                                          <label>Credit Card Number <span>*</span></label>
+                                          <input type="text"  class="inputtype">
+                                       </div>
+                                       <div class="inputbox">
+                                          <label>Expiration Date</label>
+                                          <select>
+                                             <option>--Month--</option>
+                                             <option>01 - January</option>
+                                             <option>02 - February</option>
+                                             <option>03 - March</option>
+                                             <option>04 - April</option>
+                                             <option>05 - May</option>
+                                             <option>06 - June</option>
+                                             <option>07 - July</option>
+                                             <option>08 - August</option>
+                                             <option>09 - September</option>
+                                             <option>10 - October</option>
+                                             <option>11 - November</option>
+                                             <option>12 - December</option>
+                                          </select>
+                                       </div>
+                                       <div class="inputbox">
+                                          <select>
+                                             <option>--Year--</option>
+                                             <option>2015</option>
+                                             <option>2016</option>
+                                             <option>2017</option>
+                                             <option>2018</option>
+                                             <option>2019</option>
+                                             <option>2020</option>
+                                             <option>2021</option>
+                                             <option>2022</option>
+                                             <option>2023</option>
+                                             <option>2024</option>
+                                             <option>2025</option>
+                                          </select>
+                                       </div>
+                                       <div class="inputbox">
+                                          <label>Card Verification Number <span>*</span></label>
+                                          <input type="text"  class="inputtype">
+                                          <a href="#">What is this?</a>
+                                       </div>
+                                       <div class="inputbox">
+                                          <a href="#"> <button class="mybutton floatright">Place Order</button> </a>
+                                       </div>
+                                    </form>
+                                 </div>
+                              </div>
+                           </li>
+                           
+                        </ul>
+                     </div>   
+                  </div>
+               </div>
+            </div>
+         </div>
+      </div> 
+   </div> 
+</div>
+         </div>
+      </div>
+      <!-- Path to Framework7 Library JS-->
+      <script type="text/javascript" src="js/framework7.min.js"></script>
+      <script type="text/javascript" src="js/framework7.3dpanels.min.js"></script>
+      <script type="text/javascript" src="js/framework7.indexed-list.min.js"></script>
+      <!-- Slick Carousel -->
+      <script type="text/javascript" src="js/jquery-1.12.3.min.js"></script>
+      <script type="text/javascript" src="js/slick.min.js"></script>
+      <!-- UpScroller -->
+      <script type="text/javascript" src="js/framework7.upscroller.min.js"></script>
+      <!-- Charts -->
+      <script type="text/javascript" src="js/chart.min.js"></script>
+      <!-- Path to your app js-->
+      <script type="text/javascript" src="js/my-app.js"></script>
+   </body>
+</html>

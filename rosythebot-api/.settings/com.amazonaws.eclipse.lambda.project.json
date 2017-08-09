@@ -1,0 +1,1 @@
+{"lastDeploymentHandler":"com.rosythebot.api.rosyOrderApi","lastInvokeHandler":null,"handlerMetadata":{"com.rosythebot.api.rosyOrderApi":{"deployment":{"regionId":"us-east-1","awsLambdaFunctionName":"rosyAPI","awsIamRoleName":"lambda_basic_execution","awsS3BucketName":"lambda-function-bucket-us-east-1-1498840595166","memory":0,"timeout":0},"invoke":null}}}

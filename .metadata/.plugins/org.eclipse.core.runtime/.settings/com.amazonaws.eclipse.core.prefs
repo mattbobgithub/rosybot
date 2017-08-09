@@ -1,0 +1,8 @@
+cognitoIdentityId=us-east-1\:6e81a501-ec29-4324-86cb-0da9f8d9f0a6
+cognitoIdentityPoolId=us-east-1\:d4fdc07f-94fd-4cc6-94fb-f903657f05c1
+credentialProfileAccountIds=dc51abce-5477-47ac-ab17-812725755df3
+currentAccount=dc51abce-5477-47ac-ab17-812725755df3
+currentDefaultAccount=dc51abce-5477-47ac-ab17-812725755df3
+dc51abce-5477-47ac-ab17-812725755df3\:credentialProfileName=mattbobaws
+ec2PreferencesImported=true
+eclipse.preferences.version=1
