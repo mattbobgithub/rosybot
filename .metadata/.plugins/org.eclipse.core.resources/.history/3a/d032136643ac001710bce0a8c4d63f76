@@ -1,0 +1,141 @@
+package com.rosybot.stripe_api;
+
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
+import java.math.BigDecimal;
+import java.text.DecimalFormat;
+import java.util.HashMap;
+import java.util.Map;
+
+import com.amazonaws.services.lambda.runtime.Context;
+import com.amazonaws.services.lambda.runtime.LambdaLogger;
+import com.amazonaws.services.lambda.runtime.RequestHandler;
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.rosybot.models.RosyOrder;
+import com.rosybot.services.RosyOrderService;
+import com.stripe.Stripe;
+import com.stripe.exception.APIConnectionException;
+import com.stripe.exception.APIException;
+import com.stripe.exception.AuthenticationException;
+import com.stripe.exception.CardException;
+import com.stripe.exception.InvalidRequestException;
+import com.stripe.model.Charge;
+
+public class rosyStripeApi implements RequestHandler<Object, String> {
+
+	private static LambdaLogger ll;
+	
+	
+    @Override
+    public String handleRequest(Object input, Context context) {
+       ll =  context.getLogger();
+ll.log("Input: " + input);
+
+String outputBool = "true";
+
+// first convert input object to JSON
+ObjectMapper mapperInput = new ObjectMapper();
+String inputObjectAsJsonString = null;
+
+try { 
+	inputObjectAsJsonString = mapperInput.writeValueAsString(input);
+	ll.log(inputObjectAsJsonString);
+} catch (JsonProcessingException e2) {
+	// TODO Auto-generated catch block
+	e2.printStackTrace();
+}  
+
+// now convert json string to HashMap
+HashMap<String, Object> inputMap = new HashMap<String, Object>();
+TypeReference<HashMap<String, Object>> typeRef = new TypeReference<HashMap<String, Object>>() {
+};
+InputStream is = null;
+
+try {     
+	 
+	is = new ByteArrayInputStream(inputObjectAsJsonString.getBytes("UTF-8"));
+	inputMap = mapperInput.readValue(is, typeRef);
+	
+} catch (UnsupportedEncodingException e1) {
+	// TODO Auto-generated catch block
+	e1.printStackTrace();
+} catch (JsonParseException e) {
+	// TODO Auto-generated catch block
+	e.printStackTrace();
+} catch (JsonMappingException e) {
+	// TODO Auto-generated catch block
+	e.printStackTrace();
+} catch (IOException e) {
+	// TODO Auto-generated catch block
+	e.printStackTrace();
+}
+
+String ro = inputMap.get("ro").toString();
+String tok = inputMap.get("tok").toString();
+ll.log("ro=" + ro);
+ll.log("tok=" + tok);
+
+
+RosyOrderService ros = new RosyOrderService();
+RosyOrder stripeOrder = ros.getRosyOrder(ro, "OrderId");
+
+Double ordTot = stripeOrder.getOrderTotal() * 100;
+ll.log(ordTot.toString());
+int ordTotalInt = ordTot.intValue();
+ll.log(Integer.toString(ordTotalInt));
+
+
+
+
+Stripe.apiKey = "sk_test_ZU3BO0FxrFwtOI6nCc9EjwVd";
+
+Map<String, Object> chargeParams = new HashMap<String, Object>();
+
+chargeParams.put("amount", ordTotalInt);
+chargeParams.put("currency", "usd");
+chargeParams.put("description", "Charge for " + stripeOrder.getCustomerEmail());
+chargeParams.put("source", tok);
+// ^ obtained with Stripe.js
+try {
+	Charge responseCharge = Charge.create(chargeParams);
+	
+	String fulfillmentId = ros.fulfillGlobalRoseOrder(ro);
+	String paymentId = responseCharge.getId();
+	ll.log("ro:" + ro + "    fullId:" + fulfillmentId + "  paymentId:" + paymentId );
+	ros.updateRosyOrderToFulfillment(ro, fulfillmentId, paymentId);
+	
+	
+} catch (AuthenticationException e) {
+	// TODO Auto-generated catch block
+	e.printStackTrace();
+	outputBool = "false";
+} catch (InvalidRequestException e) {
+	// TODO Auto-generated catch block
+	e.printStackTrace();
+	outputBool = "false";
+} catch (APIConnectionException e) {
+	// TODO Auto-generated catch block
+	e.printStackTrace();
+	outputBool = "false";
+} catch (CardException e) {
+	// TODO Auto-generated catch block
+	e.printStackTrace();
+	outputBool = "false";
+} catch (APIException e) {
+	// TODO Auto-generated catch block
+	e.printStackTrace();
+	outputBool = "false";
+} 
+
+
+        // TODO: implement your handler
+        return outputBool;
+    }
+
+}

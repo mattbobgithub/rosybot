@@ -49,7 +49,7 @@
 			<dependency>
 				<groupId>com.amazonaws</groupId>
 				<artifactId>aws-java-sdk-bom</artifactId>
-				<version>1.11.124</version>
+				<version>1.11.167</version>
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>
@@ -89,7 +89,7 @@
 			<artifactId>twilio</artifactId>
 			<version>(7.11.0,7.12.0]</version>
 		</dependency>
-				<dependency>
+		<dependency>
 			<groupId>joda-time</groupId>
 			<artifactId>joda-time</artifactId>
 			<version>2.9.9</version>
@@ -98,6 +98,11 @@
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-text</artifactId>
 			<version>1.1</version>
+		</dependency>
+		<dependency>
+			<groupId>com.smartystreets.api</groupId>
+			<artifactId>smartystreets-java-sdk</artifactId>
+			<version>1.0.4</version>
 		</dependency>
 	</dependencies>
 </project>

@@ -2,20 +2,20 @@
 <section name="Workbench">
 	<section name="org.eclipse.ui.texteditor.FindReplaceDialog">
 		<item value="false" key="isRegEx"/>
-		<item value="rosythe" key="selection"/>
+		<item value="Enter" key="selection"/>
 		<item value="false" key="casesensitive"/>
 		<item value="false" key="incremental"/>
 		<item value="true" key="wrap"/>
 		<item value="false" key="wholeword"/>
 		<list key="findhistory">
-			<item value="rosythe"/>
-			<item value="recipientphone"/>
-			<item value="phone"/>
-			<item value="getDeliveryAddressConfirmationDA"/>
-			<item value="does this"/>
-			<item value="rosyproducts"/>
-			<item value="what&apos;s the"/>
-			<item value="offercount"/>
+			<item value="enter"/>
+			<item value="saturday"/>
+			<item value="s3"/>
+			<item value="existingcustomerem"/>
+			<item value="s_customerEmail"/>
+			<item value="globalro"/>
+			<item value="email"/>
+			<item value="update"/>
 		</list>
 		<list key="replacehistory">
 		</list>

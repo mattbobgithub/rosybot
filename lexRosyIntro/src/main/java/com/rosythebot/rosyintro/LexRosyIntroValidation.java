@@ -1,9 +1,10 @@
 package com.rosythebot.rosyintro;
 
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import com.rosybot.models.*;
+import com.rosybot.models.Enums.RosyOrderStatus;
+import com.rosybot.services.*;
+
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -16,23 +17,12 @@ import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.LambdaLogger;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.util.StringUtils;
-import com.rosythebot.models.CurrentIntent;
-import com.rosythebot.models.DialogActionConfirmIntent;
-import com.rosythebot.models.DialogActionDelegate;
-import com.rosythebot.models.DialogActionElicitSlot;
-import com.rosythebot.models.Enums.RosyOrderStatus;
-import com.rosythebot.models.LexRequest;
-import com.rosythebot.models.LexResponse;
-import com.rosythebot.models.Message;
-import com.rosythebot.models.RosyCustomer;
-import com.rosythebot.models.RosyOrder;
-import com.rosythebot.services.RosyCustomerService;
-import com.rosythebot.services.RosyOrderService;
 
 public class LexRosyIntroValidation implements RequestHandler<Object, Object> {
 
 
 	private static final String F1_SUPPORT_NUMBER = System.getenv("F1_SUPPORT_NUMBER");
+	private static final String GR_SUPPORT_NUMBER = System.getenv("GR_SUPPORT_NUMBER");
 	
 	private LambdaLogger ll;
 	private LexRequest lexReq;
@@ -42,11 +32,16 @@ public class LexRosyIntroValidation implements RequestHandler<Object, Object> {
 	public Object handleRequest(Object input, Context context) {
 		ll = context.getLogger();
 
-		Map<String, String> sessionAttributes = new HashMap<String, String>();
+/*		Map<String, String> sessionAttributes = new HashMap<String, String>();
 
 		lexReq = LexRequest.fromLexObject(input);
 		ll.log("CURRENT INTENT:" + lexReq.getCurrentIntent().getName() + lexReq.toString());
-
+		
+		String customerPhone = lexReq.getUserId();
+		customerPhone = customerPhone.replaceAll("[^\\d]", "");
+		
+		
+	
 		if (lexReq.getInputTranscript().toLowerCase().equals("reset")) {
 			lexReq.setSessionAttributes(null);
 			
@@ -58,38 +53,46 @@ public class LexRosyIntroValidation implements RequestHandler<Object, Object> {
 		}
 
 		if (lexReq.getSessionAttributes() != null) {
-			ll.log(lexReq.getSessionAttributes().toString());
+			ll.log("RECEIVED LEX REQ SESSION ATTRIBUTES:");
+			for (Map.Entry<String, String> entry : lexReq.getSessionAttributes().entrySet()) {
+				ll.log(entry.getKey() + " : " + entry.getValue());
+			}
+
 			sessionAttributes.putAll(lexReq.getSessionAttributes());
 		}
-
+		
+    				
 		// only get customer data once, this runs after input of confirmation
 		// "ok" and we don't need it to
 
 		String introMessage = "";
 
 		if (!sessionAttributes.containsKey("s_incomingPhoneNumber")) {
-			ll.log("1");
-			String customerPhone = lexReq.getUserId();
-			customerPhone = customerPhone.replaceAll("[^\\d]", "");
+
+	
 			sessionAttributes.put("s_incomingPhoneNumber", customerPhone);
 
 			// check if customer exists already
 			if (!sessionAttributes.containsKey("existingCustomerFlag")) {
 
-				ll.log("2");
 				sessionAttributes.put("existingCustomerFlag", "false");
 				RosyCustomerService rosycustsvc = new RosyCustomerService();
 				RosyCustomer existingCustomer = rosycustsvc.getRosyCustomerByPhone(customerPhone);
 
 				if (existingCustomer != null && !StringUtils.isNullOrEmpty(existingCustomer.getFirstName())) {
-					ll.log("3");
-					ll.log("foundCustomer: " + existingCustomer.getId()) ;
 					sessionAttributes.put("existingCustomerFirstName", existingCustomer.getFirstName());
 					sessionAttributes.put("existingCustomerLastName", existingCustomer.getLastName());
+					sessionAttributes.put("existingCustomerEmail", existingCustomer.getEmail());
 
 					sessionAttributes.put("existingCustomerId", StringUtils.fromInteger(existingCustomer.getId()));
 
 					sessionAttributes.put("existingCustomerFlag", "true");
+					
+					
+		
+					
+					
+					
 					
 					
 					introMessage = "Hi " + WordUtils.capitalize(existingCustomer.getFirstName()) + ",";
@@ -124,21 +127,32 @@ public class LexRosyIntroValidation implements RequestHandler<Object, Object> {
 										+ ".";
 							} else {
 								introMessage = introMessage + " is scheduled for delivery on "
-										+ foundRosyOrder.getDeliveryDate() + ".  If you have an issue you can call FloristOne support at " + F1_SUPPORT_NUMBER;
+										+ foundRosyOrder.getDeliveryDate();
+								if (foundRosyOrder.getRosyOrderId().substring(0, 2).equals("GR")) {
+									introMessage = introMessage
+											+ ".  If you have an issue you can call GlobalRose support at "
+											+ GR_SUPPORT_NUMBER;
+								} else {
+									introMessage = introMessage
+											+ ".  If you have an issue you can call FloristOne support at "
+											+ F1_SUPPORT_NUMBER;
+								}
 							}
-							introMessage = introMessage + ". Would you like to create a new order? ";
+
+							introMessage = introMessage
+									+ ". If you'd like to create a new order, type 1 to share a contact or 2 to enter address manually. ";
 
 						}
 					} else {
 
-						introMessage = introMessage + " welcome back, would you like to order flowers for someone? ";
+						introMessage = introMessage
+								+ ". If you'd like to create a new order, type 1 to share a contact or 2 to enter address manually. ";
 					}
 				} else {
 
 					//new customer, record to database prior to anything. 
 					RosyCustomerService rcs = new RosyCustomerService();
 					int createdCustId = rcs.createCustomerByPhone(customerPhone);
-					ll.log("created new customer id:" + createdCustId);
 					sessionAttributes.put("existingCustomerId", StringUtils.fromInteger(createdCustId));
 					
 					
@@ -152,6 +166,7 @@ public class LexRosyIntroValidation implements RequestHandler<Object, Object> {
 		}
 		sessionAttributes.put("introMessage", introMessage);
 
+		*/
 		lexRes = new LexResponse();
 		DialogActionDelegate da = new DialogActionDelegate();
 		lexRes.setDialogAction(da);

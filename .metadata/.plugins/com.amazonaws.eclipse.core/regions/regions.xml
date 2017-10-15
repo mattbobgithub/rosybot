@@ -42,6 +42,8 @@
       <service name="SQS">https://queue.amazonaws.com/</service>
       <service name="SimpleDB">https://sdb.amazonaws.com/</service>
       <service name="EC2">https://ec2.us-east-1.amazonaws.com/</service>
+      <service name="ECR">https://ecr.us-east-1.amazonaws.com/</service>
+      <service name="ECS">https://ecs.us-east-1.amazonaws.com/</service>
       <service name="ElasticBeanstalk">https://elasticbeanstalk.us-east-1.amazonaws.com/</service>
       <service name="GitPush">https://git.elasticbeanstalk.us-east-1.amazonaws.com/</service>
       <service name="RDS">https://rds.us-east-1.amazonaws.com/</service>
@@ -75,6 +77,8 @@
       <service name="SNS">https://sns.us-east-2.amazonaws.com/</service>
       <service name="SQS">https://sqs.us-east-2.amazonaws.com/</service>
       <service name="EC2">https://ec2.us-east-2.amazonaws.com/</service>
+      <service name="ECR">https://ecr.us-east-2.amazonaws.com/</service>
+      <service name="ECS">https://ecs.us-east-2.amazonaws.com/</service>	  
       <service name="RDS">https://rds.us-east-2.amazonaws.com/</service>
       <service name="CloudFormation">https://cloudformation.us-east-2.amazonaws.com/</service>
       <service name="ELB">https://elasticloadbalancing.us-east-2.amazonaws.com/</service>
@@ -107,6 +111,8 @@
       <service name="SQS">https://sqs.us-west-2.amazonaws.com/</service>
       <service name="SimpleDB">https://sdb.us-west-2.amazonaws.com/</service>
       <service name="EC2">https://ec2.us-west-2.amazonaws.com/</service>
+      <service name="ECR">https://ecr.us-west-2.amazonaws.com/</service>
+      <service name="ECS">https://ecs.us-west-2.amazonaws.com/</service>
       <service name="RDS">https://rds.us-west-2.amazonaws.com/</service>
       <service name="CloudFormation">https://cloudformation.us-west-2.amazonaws.com/</service>
       <service name="ELB">https://elasticloadbalancing.us-west-2.amazonaws.com/</service>
@@ -140,6 +146,8 @@
       <service name="SQS">https://sqs.us-west-1.amazonaws.com/</service>
       <service name="SimpleDB">https://sdb.us-west-1.amazonaws.com/</service>
       <service name="EC2">https://ec2.us-west-1.amazonaws.com/</service>
+      <service name="ECR">https://ecr.us-west-1.amazonaws.com/</service>
+      <service name="ECS">https://ecs.us-west-1.amazonaws.com/</service>
       <service name="RDS">https://rds.us-west-1.amazonaws.com/</service>
       <service name="CloudFormation">https://cloudformation.us-west-1.amazonaws.com/</service>
       <service name="ELB">https://elasticloadbalancing.us-west-1.amazonaws.com/</service>
@@ -155,6 +163,7 @@
       <service name="CodeCommit">https://codecommit.us-west-1.amazonaws.com</service>
       <service name="CloudWatchEvents">https://events.us-west-1.amazonaws.com/</service>
       <service name="KMS">https://kms.us-west-1.amazonaws.com</service>
+      <service name="CodeStar">https://codestar.us-west-1.amazonaws.com</service>
     </services>
   </region>
 
@@ -170,6 +179,8 @@
       <service name="SNS">https://sns.ca-central-1.amazonaws.com/</service>
       <service name="SQS">https://sqs.ca-central-1.amazonaws.com/</service>
       <service name="EC2">https://ec2.ca-central-1.amazonaws.com/</service>
+      <service name="ECR">https://ecr.ca-central-1.amazonaws.com/</service>
+      <service name="ECS">https://ecs.ca-central-1.amazonaws.com/</service>
       <service name="RDS">https://rds.ca-central-1.amazonaws.com/</service>
       <service name="CloudFormation">https://cloudformation.ca-central-1.amazonaws.com/</service>
       <service name="ELB">https://elasticloadbalancing.ca-central-1.amazonaws.com/</service>
@@ -200,6 +211,8 @@
       <service name="SQS">https://sqs.eu-west-1.amazonaws.com/</service>
       <service name="SimpleDB">https://sdb.eu-west-1.amazonaws.com/</service>
       <service name="EC2">https://ec2.eu-west-1.amazonaws.com/</service>
+      <service name="ECR">https://ecr.eu-west-1.amazonaws.com/</service>
+      <service name="ECS">https://ecs.eu-west-1.amazonaws.com/</service>
       <service name="ElasticBeanstalk">https://elasticbeanstalk.eu-west-1.amazonaws.com/</service>
       <service name="GitPush">https://git.elasticbeanstalk.eu-west-1.amazonaws.com/</service>
       <service name="RDS">https://rds.eu-west-1.amazonaws.com/</service>
@@ -232,6 +245,8 @@
       <service name="SNS">https://sns.eu-west-2.amazonaws.com/</service>
       <service name="SQS">https://sqs.eu-west-2.amazonaws.com/</service>
       <service name="EC2">https://ec2.eu-west-2.amazonaws.com/</service>
+      <service name="ECR">https://ecr.eu-west-2.amazonaws.com/</service>
+      <service name="ECS">https://ecs.eu-west-2.amazonaws.com/</service>
       <service name="ElasticBeanstalk">https://elasticbeanstalk.eu-west-2.amazonaws.com/</service>
       <service name="GitPush">https://git.elasticbeanstalk.eu-west-2.amazonaws.com/</service>
       <service name="RDS">https://rds.eu-west-2.amazonaws.com/</service>
@@ -247,6 +262,7 @@
       <service name="Logs">https://logs.eu-west-2.amazonaws.com/</service>
       <service name="CodeCommit">https://codecommit.eu-west-2.amazonaws.com</service>
       <service name="KMS">https://kms.eu-west-2.amazonaws.com</service>
+      <service name="CodeStar">https://codestar.eu-west-2.amazonaws.com</service>
     </services>
   </region>
 
@@ -262,6 +278,8 @@
       <service name="SNS">https://sns.eu-central-1.amazonaws.com/</service>
       <service name="SQS">https://sqs.eu-central-1.amazonaws.com/</service>
       <service name="EC2">https://ec2.eu-central-1.amazonaws.com/</service>
+      <service name="ECR">https://ecr.eu-central-1.amazonaws.com/</service>
+      <service name="ECS">https://ecs.eu-central-1.amazonaws.com/</service>
       <service name="ElasticBeanstalk">https://elasticbeanstalk.eu-central-1.amazonaws.com/</service>
       <service name="GitPush">https://git.elasticbeanstalk.eu-central-1.amazonaws.com/</service>
       <service name="RDS">https://rds.eu-central-1.amazonaws.com/</service>
@@ -293,6 +311,8 @@
       <service name="SNS">https://sns.ap-south-1.amazonaws.com/</service>
       <service name="SQS">https://sqs.ap-south-1.amazonaws.com/</service>
       <service name="EC2">https://ec2.ap-south-1.amazonaws.com/</service>
+      <service name="ECR">https://ecr.ap-south-1.amazonaws.com/</service>
+      <service name="ECS">https://ecs.ap-south-1.amazonaws.com/</service>
       <service name="RDS">https://rds.ap-south-1.amazonaws.com/</service>
       <service name="CloudFormation">https://cloudformation.ap-south-1.amazonaws.com/</service>
       <service name="ElasticBeanstalk">https://elasticbeanstalk.ap-south-1.amazonaws.com/</service>
@@ -323,6 +343,8 @@
       <service name="SQS">https://sqs.ap-southeast-1.amazonaws.com/</service>
       <service name="SimpleDB">https://sdb.ap-southeast-1.amazonaws.com/</service>
       <service name="EC2">https://ec2.ap-southeast-1.amazonaws.com/</service>
+      <service name="ECR">https://ecr.ap-southeast-1.amazonaws.com/</service>
+      <service name="ECS">https://ecs.ap-southeast-1.amazonaws.com/</service>
       <service name="RDS">https://rds.ap-southeast-1.amazonaws.com/</service>
       <service name="CloudFormation">https://cloudformation.ap-southeast-1.amazonaws.com/</service>
       <service name="ElasticBeanstalk">https://elasticbeanstalk.ap-southeast-1.amazonaws.com/</service>
@@ -355,6 +377,8 @@
       <service name="SQS">http://sqs.ap-northeast-1.amazonaws.com/</service>
       <service name="SimpleDB">https://sdb.ap-northeast-1.amazonaws.com/</service>
       <service name="EC2">https://ec2.ap-northeast-1.amazonaws.com/</service>
+      <service name="ECR">https://ecr.ap-northeast-1.amazonaws.com/</service>
+      <service name="ECS">https://ecs.ap-northeast-1.amazonaws.com/</service>
       <service name="RDS">https://rds.ap-northeast-1.amazonaws.com/</service>
       <service name="CloudFormation">https://cloudformation.ap-northeast-1.amazonaws.com/</service>
       <service name="ElasticBeanstalk">https://elasticbeanstalk.ap-northeast-1.amazonaws.com/</service>
@@ -418,6 +442,8 @@
       <service name="SQS">https://sqs.ap-southeast-2.amazonaws.com/</service>
       <service name="SimpleDB">https://sdb.ap-southeast-2.amazonaws.com/</service>
       <service name="EC2">https://ec2.ap-southeast-2.amazonaws.com/</service>
+      <service name="ECR">https://ecr.p-southeast-2.amazonaws.com/</service>
+      <service name="ECS">https://ecs.p-southeast-2.amazonaws.com/</service>
       <service name="RDS">https://rds.ap-southeast-2.amazonaws.com/</service>
       <service name="CloudFormation">https://cloudformation.ap-southeast-2.amazonaws.com/</service>
       <service name="ElasticBeanstalk">https://elasticbeanstalk.ap-southeast-2.amazonaws.com/</service>
@@ -478,6 +504,8 @@
       <service name="S3">https://s3.cn-north-1.amazonaws.com.cn/</service>
       <service name="IAM">https://iam.cn-north-1.amazonaws.com.cn/</service>
       <service name="EC2">https://ec2.cn-north-1.amazonaws.com.cn/</service>
+      <service name="ECR">https://ecr.cn-north-1.amazonaws.com.cn/</service>
+      <service name="ECS">https://ecs.cn-north-1.amazonaws.com.cn/</service>
       <service name="SNS">https://sns.cn-north-1.amazonaws.com.cn/</service>
       <service name="SQS">https://sqs.cn-north-1.amazonaws.com.cn/</service>
       <service name="RDS">https://rds.cn-north-1.amazonaws.com.cn/</service>

@@ -97,7 +97,7 @@ public class RosyProductLoader implements RequestHandler<InputClass, String> {
 					String[] prodLine = nextLine[0].split("\t");
 
 					int prodLineLength = prodLine.length;
-					ll.log(StringUtils.fromInteger(prodLineLength));
+
 					String insertStatment = null;
 				
 						insertStatment = "INSERT INTO RosyProduct (name, code, price, imageUrl, category, rosyCategory, rosyOfferOrder) values(";

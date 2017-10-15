@@ -1,5 +1,9 @@
 package com.rosythebot.lambda;
 
+import com.rosybot.models.*;
+import com.rosybot.services.*;
+import com.rosybot.models.Enums;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
@@ -18,13 +22,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.commons.io.IOUtils;
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.HttpClientBuilder;
 import org.joda.time.DateTime;
 
 import com.amazonaws.services.lambda.runtime.ClientContext;
@@ -35,21 +32,7 @@ import com.amazonaws.util.StringUtils;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.rosythebot.f1.F1Request;
-import com.rosythebot.models.GenericAttachment;
-import com.rosythebot.models.ResponseCard;
-import com.rosythebot.models.RosyCustomer;
-import com.rosythebot.models.RosyProduct;
-import com.rosythebot.services.RecipientAddressService;
-import com.rosythebot.services.RosyCustomerService;
-import com.rosythebot.services.RosyOrderService;
-import com.rosythebot.services.RosyProductService;
-import com.rosythebot.models.CurrentIntent;
-import com.rosythebot.models.DialogActionElicitSlot;
-import com.rosythebot.models.LexRequest;
-import com.rosythebot.models.LexResponse;
-import com.rosythebot.models.Message;
-import com.rosythebot.models.RecipientAddress;
+
 
 public class RosyLambdaFulfillment implements RequestHandler<Object, Object> {
 	private LambdaLogger ll;
@@ -63,68 +46,71 @@ public class RosyLambdaFulfillment implements RequestHandler<Object, Object> {
 	private static final int OFFER_COUNT_LIMIT = Integer.parseInt(System.getenv("OFFER_COUNT_LIMIT"));
 	private static final int RETRY_GET_DELIVERY_DATE_ATTEMPTS = 3;
 	private static final String F1_SHIPPING_FEE = System.getenv("F1_SHIPPING_FEE");
-
+ 
 	@Override
 	public Object handleRequest(Object input, Context context) {
 
 		ll = context.getLogger();
-	//	context.getLogger().log("Input: " + input);
+		// context.getLogger().log("Input: " + input);
 
-	 
 		///////////////////////////////////////////////////////
 		// get lexRequest and populate intance variables ////
 		///////////////////////////////////////////////////////
 		lexReq = LexRequest.fromLexObject(input);
-		ll.log(lexReq.toString());
+		// ll.log(lexReq.toString());
 
 		currentIntent = lexReq.getCurrentIntent();
-		
-	
 
-		//always copy session variables over  !!! should never be empty because intro validlation function populates some
+		// always copy session variables over !!! should never be empty because
+		// intro validlation function populates some
 		sessionAttributes.putAll(lexReq.getSessionAttributes());
-		
-		ll.log("NEW REQUEST----------------------------------------- CURRENT INTENT: " + currentIntent.getName() + "    CONFIRMATIONSTATUS:" + currentIntent.getConfirmationStatus());
-		ll.log("SESSION ATTRIBUTES BELOW:");
-		for(Map.Entry<String,String> entry : sessionAttributes.entrySet()){
-			ll.log(entry.getKey() + " : " + entry.getValue());
+
+		ll.log("NEW REQUEST----------------------------------------- CURRENT INTENT: " + currentIntent.getName()
+				+ "    CONFIRMATIONSTATUS:" + currentIntent.getConfirmationStatus());
+		// ll.log("SESSION ATTRIBUTES BELOW:");
+		for (Map.Entry<String, String> entry : sessionAttributes.entrySet()) {
+			// ll.log(entry.getKey() + " : " + entry.getValue());
 		}
-		
-		
+
 		if (null == currentIntent.getSlots() || currentIntent.getSlots().isEmpty()) {
 			// do nothing
-			ll.log("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXcurrent intent slots is empty or null");
+			// ll.log("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXcurrent
+			// intent slots is empty or null");
 		} else {
 			inputSlots.putAll(currentIntent.getSlots());
 		}
 
-//		if(!sessionAttributes.containsKey("s_incomingPhoneNumber")){
-//			
-//			String customerPhone = lexReq.getUserId();
-//			customerPhone=customerPhone.replaceAll("[^\\d]", "");
-//			sessionAttributes.put("s_incomingPhoneNumber", customerPhone);
-//			//check if customer exists already
-//			RosyCustomerService rosycustsvc = new RosyCustomerService();
-//			RosyCustomer existingCustomer = rosycustsvc.getRosyCustomerByPhone(customerPhone);
-//			if(existingCustomer != null){
-//				ll.log("foundCustomer: " + existingCustomer.getFirstName() + " " + existingCustomer.getLastName());
-//			sessionAttributes.put("existingCustomerFirstName", existingCustomer.getFirstName());
-//			}
-//		}
-//		
-		
+		// if(!sessionAttributes.containsKey("s_incomingPhoneNumber")){
+		//
+		// String customerPhone = lexReq.getUserId();
+		// customerPhone=customerPhone.replaceAll("[^\\d]", "");
+		// sessionAttributes.put("s_incomingPhoneNumber", customerPhone);
+		// //check if customer exists already
+		// RosyCustomerService rosycustsvc = new RosyCustomerService();
+		// RosyCustomer existingCustomer =
+		// rosycustsvc.getRosyCustomerByPhone(customerPhone);
+		// if(existingCustomer != null){
+		// ll.log("foundCustomer: " + existingCustomer.getFirstName() + " " +
+		// existingCustomer.getLastName());
+		// sessionAttributes.put("existingCustomerFirstName",
+		// existingCustomer.getFirstName());
+		// }
+		// }
+		//
+
 		/// trim spaces from input and set y and n.
-		for (Map.Entry<String, String> entry : inputSlots.entrySet()) { 
-			//replace yeses and nos with y and n and then just trim spaces from everything else
-			if(!StringUtils.isNullOrEmpty(entry.getValue())){
-			if (entry.getValue().toLowerCase().trim().equals("yes")) {
-				inputSlots.replace(entry.getKey(), "y");
-			} else if (entry.getValue().toLowerCase().trim().equals("no")) {
-				inputSlots.replace(entry.getKey(), "n");
-			} else {
-				// just trim everything else
-				inputSlots.replace(entry.getKey(), entry.getValue().trim());
-			}
+		for (Map.Entry<String, String> entry : inputSlots.entrySet()) {
+			// replace yeses and nos with y and n and then just trim spaces from
+			// everything else
+			if (!StringUtils.isNullOrEmpty(entry.getValue())) {
+				if (entry.getValue().toLowerCase().trim().equals("yes")) {
+					inputSlots.replace(entry.getKey(), "y");
+				} else if (entry.getValue().toLowerCase().trim().equals("no")) {
+					inputSlots.replace(entry.getKey(), "n");
+				} else {
+					// just trim everything else
+					inputSlots.replace(entry.getKey(), entry.getValue().trim());
+				}
 			}
 		}
 		lexReq.setInputTranscript(lexReq.getInputTranscript().trim());
@@ -143,8 +129,8 @@ public class RosyLambdaFulfillment implements RequestHandler<Object, Object> {
 		addNextdialogAction(nextAction);
 
 		ll.log("----------------------------------------------------------------SENDING RESPONSE FROM LAMBDA FULFILLMENT:");
-		ll.log(lexRes.getDialogAction().toString());
-		ll.log(lexRes.getSessionAttributes().toString());
+		// ll.log(lexRes.getDialogAction().toString());
+		// ll.log(lexRes.getSessionAttributes().toString());
 		return lexRes;
 	}
 
@@ -163,31 +149,34 @@ public class RosyLambdaFulfillment implements RequestHandler<Object, Object> {
 				// clear session if not first call and Intro is the calling
 				// method (must be a reset)
 				inputSlots.clear();
-				
-				//only copy over some session attribs
 
+				// only copy over some session attribs
+
+				String ecem = sessionAttributes.get("existingCustomerEmail");
 				String ecfn = sessionAttributes.get("existingCustomerFirstName");
 				String ecln = sessionAttributes.get("existingCustomerLastName");
 				String eci = sessionAttributes.get("existingCustomerId");
 				String ecf = sessionAttributes.get("existingCustomerFlag");
 				String ipn = sessionAttributes.get("s_incomingPhoneNumber");
-				
+
 				sessionAttributes.clear();
 
-				sessionAttributes.put("existingCustomerFirstName", ecfn);				
-				sessionAttributes.put("existingCustomerLastName", ecln);				
-				sessionAttributes.put("existingCustomerFlag", ecf);				
+				sessionAttributes.put("s_customerEmail", ecem);
+				sessionAttributes.put("existingCustomerFirstName", ecfn);
+				sessionAttributes.put("existingCustomerLastName", ecln);
+				sessionAttributes.put("existingCustomerFlag", ecf);
 				sessionAttributes.put("existingCustomerId", eci);
 				sessionAttributes.put("s_incomingPhoneNumber", ipn);
-				
+
 			}
-			ll.log("setting fulfilled action from returned current intent of:" + returnedIntentName);
+			// ll.log("setting fulfilled action from returned current intent
+			// of:" + returnedIntentName);
 			sessionAttributes.put("currentFulfilledAction", returnedIntentName);
 		}
 
 		/// now determine next action
 		String currentFulfilledAction = sessionAttributes.get("currentFulfilledAction");
-		ll.log(" determine next action based on:" + currentFulfilledAction);
+		// ll.log(" determine next action based on:" + currentFulfilledAction);
 
 		switch (currentFulfilledAction) {
 		case "Intro":
@@ -251,16 +240,15 @@ public class RosyLambdaFulfillment implements RequestHandler<Object, Object> {
 			// set a dummy sessionAttribute to make sure it gets initialized
 			sessionAttributes.put("s_introPassed", "Y");
 			da.setIntentName("GetOccasion");
-			String occasionMessage = "What's the occasion (or flower type)? "
-					+ "Say things like: 'Birthday', 'peach roses', 'just because', or 'get well'. "
-					+ "Be patient while pics load and make sure data is on";
-			
+			String occasionMessage = "What's the occasion? "
+					+ "Say things like: 'Birthday', 'just because', or 'get well'. "
+					+ "[Be patient while pics load and make sure data is on]:";
+
 			da.setMessage(new Message(occasionMessage));
-					setInputSlots(da.getIntentName());
+			setInputSlots(da.getIntentName());
 			da.setSlots(inputSlots);
 			da.setSlotToElicit("occasion");
 			lexRes.setDialogAction(da);
-			ll.log("prompting to get occasion");
 			break;
 		case "GetProductSelection":
 			// set session occasion
@@ -273,14 +261,15 @@ public class RosyLambdaFulfillment implements RequestHandler<Object, Object> {
 				int offerCount = 1;
 				// initialize session occassion on first loop through
 				if (StringUtils.isNullOrEmpty(inputSlots.get("productSelected"))) {
-					if(inputSlots.containsKey("occasion") && StringUtils.isNullOrEmpty(inputSlots.get("occasion"))){
-						//have to get occasion from input transcript cause lex is lame and slot type is not getting assigned
+					if (inputSlots.containsKey("occasion") && StringUtils.isNullOrEmpty(inputSlots.get("occasion"))) {
+						// have to get occasion from input transcript cause lex
+						// is lame and slot type is not getting assigned
 						inputSlots.put("occasion", lexReq.getInputTranscript());
 						sessionAttributes.put("s_occasion", inputSlots.get("occasion"));
-					}else{
+					} else {
 						sessionAttributes.put("s_occasion", inputSlots.get("occasion"));
 					}
-					
+
 				}
 				// increment session offer count
 				if (!StringUtils.isNullOrEmpty(sessionAttributes.get("offerCount"))) {
@@ -305,26 +294,27 @@ public class RosyLambdaFulfillment implements RequestHandler<Object, Object> {
 				sessionAttributes.put("offerCount", StringUtils.fromInteger(offerCount));
 
 				da.setIntentName("GetProductSelection");
-				da.setMessage(new Message("Offer #1 of " + StringUtils.fromInteger(OFFER_COUNT_LIMIT) + ", (y or n)"));
+				// da.setMessage(new Message("Offer #1 of " +
+				// StringUtils.fromInteger(OFFER_COUNT_LIMIT) + ", [y or n]"));
+
 				setInputSlots(da.getIntentName());
 				da.setSlots(inputSlots);
 				da.setSlotToElicit("productSelected");
 
-				//get total price for offer by adding shipping fee
+				// get total price for offer by adding shipping fee
 				Double priceDouble = Double.parseDouble(productOffering.getPrice());
 				Double shipFee = Double.parseDouble(F1_SHIPPING_FEE);
 				Double offerTot = priceDouble + shipFee;
-				Double truncatedDouble = BigDecimal.valueOf(offerTot)
-				    .setScale(3, RoundingMode.HALF_UP)
-				    .doubleValue();
-				
+				Double truncatedDouble = BigDecimal.valueOf(offerTot).setScale(3, RoundingMode.HALF_UP).doubleValue();
+
 				// create message
 				String productMessageString = "Offer #" + StringUtils.fromInteger(offerCount) + " of "
-						+ StringUtils.fromInteger(OFFER_COUNT_LIMIT) + " Price: $" + StringUtils.fromDouble(truncatedDouble)
-						+ " Description:" + productOffering.getName() + "  (y or n)";
-				if (offerCount > 1) {
-					productMessageString = productMessageString + "...or any other key to start list over.";
-				}
+						+ StringUtils.fromInteger(OFFER_COUNT_LIMIT) + " Price: $"
+						+ StringUtils.fromDouble(truncatedDouble) + " Description:" + productOffering.getName()
+						+ "  [y or n]";
+				// if (offerCount > 1) {
+				productMessageString = productMessageString + "...or any other key to start list over:";
+				// }
 				da.setMessage(new Message(productMessageString));
 
 				// create response card
@@ -333,7 +323,9 @@ public class RosyLambdaFulfillment implements RequestHandler<Object, Object> {
 				GenericAttachment ga = new GenericAttachment();
 				ga.setTitle("Offer#" + offerCount);
 				ga.setSubTitle(productOffering.getPrice());
+				// String imageurl = "https://rosybot.com/images/rosy_bot.vcf";
 				ga.setImageUrl(productOffering.getImageURL());
+				// ga.setImageUrl(imageurl);
 				Set<GenericAttachment> gas = new HashSet<GenericAttachment>();
 				gas.add(ga);
 				rc.setGenericAttachments(gas);
@@ -344,9 +336,7 @@ public class RosyLambdaFulfillment implements RequestHandler<Object, Object> {
 				// set sessionvariable with currentOfferProductCode
 				sessionAttributes.put("s_rosyProductId", StringUtils.fromInteger(productOffering.getId()));
 				sessionAttributes.put("s_currentOfferProductCode", productOffering.getCode());
-	
-				
-				ll.log("prompting to get product selection");
+
 			} else {
 
 				// product selected, move to next slot
@@ -371,26 +361,29 @@ public class RosyLambdaFulfillment implements RequestHandler<Object, Object> {
 
 				// move to get delivery address for the first time
 				da.setIntentName("GetDeliveryAddress");
-				da.setMessage(new Message("Enter Delivery street number and street name for delivery (without apt or suite num.  like, '1522 N. Anystreet Ave')"));
+				da.setMessage(new Message(
+						"Enter Delivery street number and name for delivery [without apt or suite num.  like this: '1522 N. Anystreet Ave']:"));
 				setInputSlots(da.getIntentName());
 				da.setSlots(inputSlots);
 				da.setSlotToElicit("streetAddress");
 				lexRes.setDialogAction(da);
-				ll.log("prompting to get streetAddress");
+				ll.log("INTENT TO BE CALLED:" + da.getIntentName());
+				ll.log("INPUT SLOTS SENT:" + inputSlots.toString());
 			} else {
 				if (StringUtils.isNullOrEmpty(inputSlots.get("noteText"))) {
 					// reset confirmed flag here
 					inputSlots.put("noteConfirmed", null);
 					// inputSlots.put("noteText", null);
 
-					ll.log("note is not confirmed, re-prompt");
 					da.setIntentName("GetNote");
-					da.setMessage(new Message("Write a note to be printed on a card (200 char max).  I will re-ask if it's too long."));
+					da.setMessage(new Message(
+							"Write a note to be printed on a card [200 char max - I will re-ask if it's too long]:"));
 					setInputSlots(da.getIntentName());
 					da.setSlots(inputSlots);
 					da.setSlotToElicit("noteText");
 					lexRes.setDialogAction(da);
-					ll.log("prompting to get noteText");
+					ll.log("INTENT TO BE CALLED:" + da.getIntentName());
+					ll.log("INPUT SLOTS SENT:" + inputSlots.toString());
 
 				} else {
 					if (StringUtils.isNullOrEmpty(inputSlots.get("noteConfirmed"))) {
@@ -398,9 +391,7 @@ public class RosyLambdaFulfillment implements RequestHandler<Object, Object> {
 						// inputSlots.get("noteText") + " transcript: "
 						// + lexReq.getInputTranscript());
 						inputSlots.put("noteText", lexReq.getInputTranscript());
-						ll.log("note is not confirmed");
 						da = getNoteConfirmationDA();
-						ll.log("prompting to get noteConfirmed");
 						sessionAttributes.put("s_noteText", inputSlots.get("noteText"));
 					} else {
 
@@ -408,22 +399,21 @@ public class RosyLambdaFulfillment implements RequestHandler<Object, Object> {
 
 						// reset confirmed flag here
 						inputSlots.put("noteConfirmed", null);
-						// inputSlots.put("noteText", null);
-
-						ll.log("note is not confirmed, re-prompt");
 						da.setIntentName("GetNote");
-						da.setMessage(new Message("Write a note to be printed on a card (200 char max).  I will re-ask if it's too long."));
+						da.setMessage(new Message(
+								"Write a note to be printed on a card [200 char max - I will re-ask if it's too long]:"));
 						setInputSlots(da.getIntentName());
 						da.setSlots(inputSlots);
 						da.setSlotToElicit("noteText");
 						lexRes.setDialogAction(da);
-						ll.log("prompting to get noteText");
-
+						ll.log("INTENT TO BE CALLED:" + da.getIntentName());
+						ll.log("INPUT SLOTS SENT:" + inputSlots.toString());
 					}
 				}
 			}
 			break;
 		case "GetDeliveryAddress":
+			sessionAttributes.put("s_vCardInd", "false");
 
 			if (StringUtils.isNullOrEmpty(inputSlots.get("addressConfirmed"))) {
 				String addyField = "";
@@ -434,96 +424,134 @@ public class RosyLambdaFulfillment implements RequestHandler<Object, Object> {
 
 					da = getDeliveryAddressDA(addyField);
 				} else {
+
 					// store street address in session so it doesn't get blanked
 					// out
 					if (!StringUtils.isNullOrEmpty(inputSlots.get("streetAddress"))) {
 						sessionAttributes.put("s_streetAddress", inputSlots.get("streetAddress"));
-					}
-					
-					
-					//set to null if n entered
-					if(lexReq.getInputTranscript().toLowerCase().equals("n")){
-						inputSlots.put("aptNo", "n");
-					};
-				
-				
-					
-					ll.log("STREET ADDY ENTERED, NOW CHECK IF APT NO IS ALREADY ENTERED");
-					
-					if (StringUtils.isNullOrEmpty(inputSlots.get("aptNo"))
-							&& StringUtils.isNullOrEmpty(sessionAttributes.get("s_aptNo"))) {			
 
-						ll.log("APT NO IS NULL, PROMPT FOR IT NOW");
-						
-						
-						addyField = "aptNo";
-						da = getDeliveryAddressDA(addyField);
-					} else {
-						
+						// CHECK IF VCARD INPUT HERE:
+						if (StringUtils.beginsWithIgnoreCase(lexReq.getInputTranscript(), "https://api.twilio.com")) {
+							ll.log("VCARD INPUT TO TRUE");
 
-						ll.log("APT NO IS NOW ENTERED, STORE IN SESSION AND PROMPT FOR POSTAL");
-											
-						
-						if (!StringUtils.isNullOrEmpty(inputSlots.get("aptNo"))) {
-							sessionAttributes.put("s_aptNo", inputSlots.get("aptNo"));
+							sessionAttributes.put("s_vCardInd", "true");
+							// add vCard address to db, add vCard address id to
+							// sessionVariables.
+							RecipientAddressService ras = new RecipientAddressService();
+							RecipientAddress vCardAddress = ras.getAddressFromVCardUrl(lexReq.getInputTranscript());
+
+							if (!StringUtils.isNullOrEmpty(vCardAddress.getStreetAddress1())) {
+								sessionAttributes.put("s_streetAddress", vCardAddress.getStreetAddress1());
+							}
+							if (!StringUtils.isNullOrEmpty(vCardAddress.getStreetAddress2())) {
+								sessionAttributes.put("s_aptNo", vCardAddress.getStreetAddress2());
+							}
+							if (!StringUtils.isNullOrEmpty(vCardAddress.getCity())) {
+								sessionAttributes.put("s_city", vCardAddress.getCity());
+							}
+							if (!StringUtils.isNullOrEmpty(vCardAddress.getState())) {
+								sessionAttributes.put("s_state", vCardAddress.getState());
+							}
+							if (!StringUtils.isNullOrEmpty(vCardAddress.getPostalCode())) {
+								sessionAttributes.put("s_postalCode", vCardAddress.getPostalCode());
+							}
+
+							if (StringUtils.isNullOrEmpty(vCardAddress.getCountry())
+									|| vCardAddress.getCountry().equals("USA")) {
+								sessionAttributes.put("s_country", "US");
+							}
+
+							if (!StringUtils.isNullOrEmpty(vCardAddress.getPhone())){									
+							sessionAttributes.put("s_recipientPhone", vCardAddress.getPhone());
+							}
+							
+							if (!StringUtils.isNullOrEmpty(vCardAddress.getFullName())){									
+								sessionAttributes.put("s_recipientPhone", vCardAddress.getFullName());
+								}
+							
+							String derivedAddressForConfirmation = vCardAddress.getFullName()  + " " + vCardAddress.getStreetAddress1() + ", "
+									+ vCardAddress.getStreetAddress2() + ", " + vCardAddress.getCity() + ", "
+									+ vCardAddress.getState() + " " + vCardAddress.getPostalCode() + "   PHONE:" + vCardAddress.getPhone();
+
+							da = getDeliveryAddressConfirmationDA(derivedAddressForConfirmation);
+
 						}
-						
-						
-						
-						
-						
-						
-						
-						
-						if (StringUtils.isNullOrEmpty(inputSlots.get("postalCode"))
-							&& StringUtils.isNullOrEmpty(sessionAttributes.get("s_postalCode"))) {								
-								addyField = "postalCode";
-									da = getDeliveryAddressDA(addyField);
-									
+
+					}
+
+					if (!sessionAttributes.get("s_vCardInd").equals("true")) {
+
+						// set to null if n entered
+						if (lexReq.getInputTranscript().toLowerCase().equals("n")) {
+							inputSlots.put("aptNo", "n");
+						}
+
+						if (StringUtils.isNullOrEmpty(inputSlots.get("aptNo"))
+								&& StringUtils.isNullOrEmpty(sessionAttributes.get("s_aptNo"))) {
+
+							addyField = "aptNo";
+							da = getDeliveryAddressDA(addyField);
 						} else {
 
-						// store postal code in session so it doesn't get
-						// blanked out
-						if (!StringUtils.isNullOrEmpty(inputSlots.get("postalCode"))) {
-								sessionAttributes.put("s_postalCode", inputSlots.get("postalCode"));
-						}
-						String addy1addy2 = sessionAttributes.get("s_streetAddress");
-						if(sessionAttributes.get("s_aptNo").toLowerCase().equals("n"))
-						{
-							 sessionAttributes.put("s_aptNo", "");
-						}else{
-							addy1addy2 = addy1addy2 + " " + sessionAttributes.get("s_aptNo");
-						}
-						// get full address from GOOGLE from postal and city and
-						// get confirmation
-						RecipientAddressService ras = new RecipientAddressService();
-						RecipientAddress ra = ras.fromStreetAddressAndPostal(addy1addy2,
-								sessionAttributes.get("s_postalCode"));
-						String derivedAddressForConfirmation = ra.getStreetAddress1() + ", " + ra.getCity() + ", "
-								+ ra.getState() + " " + ra.getPostalCode();
+							if (!StringUtils.isNullOrEmpty(inputSlots.get("aptNo"))) {
+								sessionAttributes.put("s_aptNo", inputSlots.get("aptNo"));
+							}
 
-						sessionAttributes.put("s_streetAddress", sessionAttributes.get("s_streetAddress"));
-						sessionAttributes.put("s_city", ra.getCity());
-						sessionAttributes.put("s_state", ra.getState());
-						sessionAttributes.put("s_postalCode", ra.getPostalCode());
-						
-						if(ra.getCountry().equals("USA")){
-						sessionAttributes.put("s_country", "US");
+							if (StringUtils.isNullOrEmpty(inputSlots.get("postalCode"))
+									&& StringUtils.isNullOrEmpty(sessionAttributes.get("s_postalCode"))) {
+								addyField = "postalCode";
+								da = getDeliveryAddressDA(addyField);
 
-						da = getDeliveryAddressConfirmationDA(derivedAddressForConfirmation);
-						}
-						else{
-							//country is not USA, send back to begining with warning
-							
+							} else {
+
+								// store postal code in session so it doesn't
+								// get
+								// blanked out
+								if (!StringUtils.isNullOrEmpty(inputSlots.get("postalCode"))) {
+									sessionAttributes.put("s_postalCode", inputSlots.get("postalCode"));
+								}
+								String addy1addy2 = sessionAttributes.get("s_streetAddress");
+								if (sessionAttributes.get("s_aptNo").toLowerCase().equals("n")) {
+									sessionAttributes.put("s_aptNo", "");
+								} else {
+									addy1addy2 = addy1addy2 + " " + sessionAttributes.get("s_aptNo");
+								}
+								// get full address from GOOGLE from postal and
+								// city
+								// and
+								// get confirmation
+								RecipientAddressService ras = new RecipientAddressService();
+								RecipientAddress ra = ras.fromStreetAddressAndPostal(addy1addy2,
+										sessionAttributes.get("s_postalCode"));
+								String derivedAddressForConfirmation = ra.getStreetAddress1() + ", " + ra.getCity()
+										+ ", " + ra.getState() + " " + ra.getPostalCode();
+
+								sessionAttributes.put("s_streetAddress", sessionAttributes.get("s_streetAddress"));
+								sessionAttributes.put("s_city", ra.getCity());
+								sessionAttributes.put("s_state", ra.getState());
+								sessionAttributes.put("s_postalCode", ra.getPostalCode());
+
+								if (ra.getCountry().equals("USA")) {
+									sessionAttributes.put("s_country", "US");
+
+									da = getDeliveryAddressConfirmationDA(derivedAddressForConfirmation);
+								} else {
+									// country is not USA, send back to begining
+									// with warning
+
+								}
+							}
 						}
 					}
 				}
-			}
 
 			} else {
 				// we know it's not null, so it's been prompted already, process
 				// from here
 				if (!inputSlots.get("addressConfirmed").toLowerCase().equals("y")) {
+					// set session attribute vcard back to false if address not
+					// confirmed by user
+					sessionAttributes.put("s_vCardInd", "false");
 					// move to get address manually here //go back to manual
 					// delivery step one by resetting all inputslots.
 					inputSlots.clear();
@@ -534,6 +562,7 @@ public class RosyLambdaFulfillment implements RequestHandler<Object, Object> {
 					sessionAttributes.remove("s_postalCode");
 					// restart call to manual delivery address with street
 					// address
+
 					da = getManualDeliveryAddressDA("manualStreetAddress");
 				} else {
 
@@ -541,97 +570,105 @@ public class RosyLambdaFulfillment implements RequestHandler<Object, Object> {
 					// variables
 
 					// move to next step
-
-					da = getDeliveryPhoneDA();
-					
-				
+					if (sessionAttributes.get("s_vCardInd").equals("true")) {
+						da = getFirstDeliveryDateDA();
+					} else {
+						da = getDeliveryPhoneDA();
+					}
 
 				}
 			}
 			break;
 		case "GetManualDeliveryAddress":
-			// get deliveryAddressManually
-			ll.log("getting delivery address manually");
+			// get deliveryAddressManually instead
 			if (StringUtils.isNullOrEmpty(inputSlots.get("manualAddressConfirmed"))) {
 				String addyField = "";
 
-				if (StringUtils.isNullOrEmpty(inputSlots.get("manualStreetAddress")) && StringUtils.isNullOrEmpty(sessionAttributes.get("s_manualStreetAddress"))) {
+				if (StringUtils.isNullOrEmpty(inputSlots.get("manualStreetAddress"))
+						&& StringUtils.isNullOrEmpty(sessionAttributes.get("s_manualStreetAddress"))) {
 					addyField = "manualStreetAddress";
 					da = getManualDeliveryAddressDA(addyField);
 				} else {
-					//set session street address
-					if(!StringUtils.isNullOrEmpty(inputSlots.get("manualStreetAddress"))){
+					// set session street address
+					if (!StringUtils.isNullOrEmpty(inputSlots.get("manualStreetAddress"))) {
 						sessionAttributes.put("s_manualStreetAddress", inputSlots.get("manualStreetAddress"));
-						
+
 					}
-					
-					if (StringUtils.isNullOrEmpty(inputSlots.get("manualAptNo")) && StringUtils.isNullOrEmpty(sessionAttributes.get("s_manualAptNo"))) {
+
+					if (StringUtils.isNullOrEmpty(inputSlots.get("manualAptNo"))
+							&& StringUtils.isNullOrEmpty(sessionAttributes.get("s_manualAptNo"))) {
 						addyField = "manualAptNo";
 						da = getManualDeliveryAddressDA(addyField);
 					} else {
-						//set session manualAptNo
-						if(!StringUtils.isNullOrEmpty(inputSlots.get("manualAptNo"))){
+						// set session manualAptNo
+						if (!StringUtils.isNullOrEmpty(inputSlots.get("manualAptNo"))) {
 							sessionAttributes.put("s_manualAptNo", inputSlots.get("manualAptNo"));
-							
+
 						}
-			
-						
-					if (StringUtils.isNullOrEmpty(inputSlots.get("manualCity")) && StringUtils.isNullOrEmpty(sessionAttributes.get("s_manualCity")) ) {
-						addyField = "manualCity";
-						da = getManualDeliveryAddressDA(addyField);
-					} else {
-					
-						//set session manualCity
-						if(!StringUtils.isNullOrEmpty(inputSlots.get("manualCity"))){
-							sessionAttributes.put("s_manualCity", inputSlots.get("manualCity"));
-							
-						}
-						
-						if (StringUtils.isNullOrEmpty(inputSlots.get("manualState")) && StringUtils.isNullOrEmpty(sessionAttributes.get("s_manualState"))) {
-							addyField = "manualState";
+
+						if (StringUtils.isNullOrEmpty(inputSlots.get("manualCity"))
+								&& StringUtils.isNullOrEmpty(sessionAttributes.get("s_manualCity"))) {
+							addyField = "manualCity";
 							da = getManualDeliveryAddressDA(addyField);
-						} else {						
-							
-							//set session manualState
-							if(!StringUtils.isNullOrEmpty(inputSlots.get("manualState"))){
-								sessionAttributes.put("s_manualState", inputSlots.get("manualState"));
-								
+						} else {
+
+							// set session manualCity
+							if (!StringUtils.isNullOrEmpty(inputSlots.get("manualCity"))) {
+								sessionAttributes.put("s_manualCity", inputSlots.get("manualCity"));
+
 							}
-							
-							if (StringUtils.isNullOrEmpty(inputSlots.get("manualPostalCode")) && StringUtils.isNullOrEmpty(sessionAttributes.get("s_manualPostalCode"))) {
-								addyField = "manualPostalCode";
+
+							if (StringUtils.isNullOrEmpty(inputSlots.get("manualState"))
+									&& StringUtils.isNullOrEmpty(sessionAttributes.get("s_manualState"))) {
+								addyField = "manualState";
 								da = getManualDeliveryAddressDA(addyField);
 							} else {
-								
-								//set session manualCity
-								if(!StringUtils.isNullOrEmpty(inputSlots.get("manualPostalCode"))){
-									sessionAttributes.put("s_manualPostalCode", inputSlots.get("manualPostalCode"));
-									
+
+								// set session manualState
+								if (!StringUtils.isNullOrEmpty(inputSlots.get("manualState"))) {
+									sessionAttributes.put("s_manualState", inputSlots.get("manualState"));
+
 								}
-								
-								ll.log("all manual address fields obtained");
-								// address populated, get confirmation
-								
-								if (inputSlots.get("manualAptNo").toLowerCase().equals("n")){
-									inputSlots.put("manualAptNo", " ");
+
+								if (StringUtils.isNullOrEmpty(inputSlots.get("manualPostalCode"))
+										&& StringUtils.isNullOrEmpty(sessionAttributes.get("s_manualPostalCode"))) {
+									addyField = "manualPostalCode";
+									da = getManualDeliveryAddressDA(addyField);
+								} else {
+
+									// set session manualCity
+									if (!StringUtils.isNullOrEmpty(inputSlots.get("manualPostalCode"))) {
+										sessionAttributes.put("s_manualPostalCode", inputSlots.get("manualPostalCode"));
+
+									}
+
+									// address populated, get confirmation
+
+									if (inputSlots.get("manualAptNo").toLowerCase().equals("n")) {
+										inputSlots.put("manualAptNo", " ");
+									}
+
+									if (sessionAttributes.get("s_manualAptNo").toLowerCase().equals("n")) {
+										sessionAttributes.put("s_manualAptNo", " ");
+									}
+
+									// String confirmAddyString =
+									// inputSlots.get("manualStreetAddress") + "
+									// " + inputSlots.get("manualAptNo") + ","
+									// + inputSlots.get("manualCity") + "," +
+									// inputSlots.get("manualState") + ","
+									// + inputSlots.get("manualPostalCode");
+
+									String confirmAddyString = sessionAttributes.get("s_manualStreetAddress") + " "
+											+ sessionAttributes.get("s_manualAptNo") + " "
+											+ sessionAttributes.get("s_manualCity ") + ","
+											+ sessionAttributes.get("s_manualState") + " "
+											+ sessionAttributes.get("s_manualPostalCode");
+
+									da = getManualDeliveryAddressConfirmationDA(confirmAddyString);
 								}
-								
-								if (sessionAttributes.get("s_manualAptNo").toLowerCase().equals("n")){
-									sessionAttributes.put("s_manualAptNo", " ");
-								}
-								
-//								String confirmAddyString = inputSlots.get("manualStreetAddress") + " " + inputSlots.get("manualAptNo") + ","
-//										+ inputSlots.get("manualCity") + "," + inputSlots.get("manualState") + ","
-//										+ inputSlots.get("manualPostalCode");
-								
-								String confirmAddyString = sessionAttributes.get("s_manualStreetAddress") + " " + sessionAttributes.get("s_manualAptNo") + " "
-										+ sessionAttributes.get("s_manualCity ") + "," + sessionAttributes.get("s_manualState") + " "
-										+ sessionAttributes.get("s_manualPostalCode");
-								
-								da = getManualDeliveryAddressConfirmationDA(confirmAddyString);
 							}
 						}
-					}
 					}
 				}
 			} else {
@@ -645,17 +682,15 @@ public class RosyLambdaFulfillment implements RequestHandler<Object, Object> {
 					// address
 					da = getManualDeliveryAddressDA("manualStreetAddress");
 				}
-				ll.log("MANUAL ADDRESS CONFIRMED!");
 				// record address here
 				sessionAttributes.put("s_streetAddress", sessionAttributes.get("s_manualStreetAddress"));
-				if(!sessionAttributes.get("s_manualAptNo").toLowerCase().equals("n")){
-				sessionAttributes.put("s_aptNo", sessionAttributes.get("s_manualAptNo"));
+				if (!sessionAttributes.get("s_manualAptNo").toLowerCase().equals("n")) {
+					sessionAttributes.put("s_aptNo", sessionAttributes.get("s_manualAptNo"));
 				}
 				sessionAttributes.put("s_city", sessionAttributes.get("s_manualCity"));
 				sessionAttributes.put("s_state", sessionAttributes.get("s_manualState"));
 				sessionAttributes.put("s_postalCode", sessionAttributes.get("s_manualPostalCode"));
 				sessionAttributes.put("s_country", "US");
-				
 
 				// move to next step
 				da = getDeliveryPhoneDA();
@@ -668,22 +703,21 @@ public class RosyLambdaFulfillment implements RequestHandler<Object, Object> {
 			if (StringUtils.isNullOrEmpty(inputSlots.get("recipientPhone"))) {
 				inputSlots.put("recipientPhone", lexReq.getInputTranscript());
 			}
-			
 
 			if (StringUtils.isNullOrEmpty(inputSlots.get("recipientPhone"))) {
-		
+
 				da = getDeliveryPhoneDA();
-				
-			}else{			
-			
-				String recipPhone =  inputSlots.get("recipientPhone");			
-				
+
+			} else {
+
+				String recipPhone = inputSlots.get("recipientPhone");
+
 				sessionAttributes.put("s_recipientPhone", recipPhone);
-			
+
 				da = getFirstDeliveryDateDA();
 			}
-		
-		break;
+
+			break;
 		case "GetDeliveryDate":
 			// if null, then get actual entered date from input transcript
 			if (StringUtils.isNullOrEmpty(inputSlots.get("deliveryDateConfirmed"))) {
@@ -695,21 +729,19 @@ public class RosyLambdaFulfillment implements RequestHandler<Object, Object> {
 				String acceptedFirstDate = inputSlots.get("deliveryDateConfirmed");
 				// check date and then let them know it's okay
 				// acceptedFirstDate = normalizeInputDate(acceptedFirstDate);
-				ll.log("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX-acceptedFirstDate:"
-						+ sessionAttributes.get("s_soonestDeliveryDate"));
+
 				sessionAttributes.put("s_deliveryDate", sessionAttributes.get("s_soonestDeliveryDate"));
-				
+
 				// move to next step
-				if(sessionAttributes.get("existingCustomerFlag").equals("false")){
+				if (sessionAttributes.get("existingCustomerFlag").equals("false")) {
 					da = getCustomerNameDA(null);
-				}else
-				{
-					sessionAttributes.put("s_customerFullName", sessionAttributes.get("existingCustomerFirstName") + " " + sessionAttributes.get("existingCustomerLastName"));
+				} else {
+					sessionAttributes.put("s_customerFullName", sessionAttributes.get("existingCustomerFirstName") + " "
+							+ sessionAttributes.get("existingCustomerLastName"));
 					String orderUrl = getOrderUrl();
 					da = getShowOrderURLDA(orderUrl);
-					
+
 				}
-				
 
 			} else {
 
@@ -725,15 +757,16 @@ public class RosyLambdaFulfillment implements RequestHandler<Object, Object> {
 
 						// move to next step
 						// move to next step
-						if(sessionAttributes.get("existingCustomerFlag").equals("false")){
+						if (sessionAttributes.get("existingCustomerFlag").equals("false")) {
 							da = getCustomerNameDA(null);
-						}else
-						{	
-							sessionAttributes.put("s_customerFullName", sessionAttributes.get("existingCustomerFirstName") + " " + sessionAttributes.get("existingCustomerLastName"));
-						
+						} else {
+							sessionAttributes.put("s_customerFullName",
+									sessionAttributes.get("existingCustomerFirstName") + " "
+											+ sessionAttributes.get("existingCustomerLastName"));
+
 							String orderUrl = getOrderUrl();
 							da = getShowOrderURLDA(orderUrl);
-							
+
 						}
 
 					} else {
@@ -766,22 +799,24 @@ public class RosyLambdaFulfillment implements RequestHandler<Object, Object> {
 	}
 
 	private void setInputSlots(String intentName) {
+
 		switch (intentName) {
 		case "Intro":
 			inputSlots.clear();
 			break;
 		case "GetOccasion":
+			inputSlots.clear();
 			if (!inputSlots.containsKey("occasion")) {
 				inputSlots.put("occasion", null);
 			}
 			break;
 		case "GetProductSelection":
+
 			// put slots into session variables
 			if (!StringUtils.isNullOrEmpty(inputSlots.get("occasion"))) {
 				sessionAttributes.put("s_occasion", inputSlots.get("occasion"));
-
 			}
-
+			inputSlots.clear();
 			// remove slots from previous intent
 			inputSlots.remove("occasion");
 
@@ -794,7 +829,8 @@ public class RosyLambdaFulfillment implements RequestHandler<Object, Object> {
 
 			// put slots into session variables
 			sessionAttributes.put("s_productSelected", inputSlots.get("productSelected"));
-			ll.log("removing product sleected.");
+
+			inputSlots.clear();
 			// remove slots from previous intent
 			inputSlots.remove("productSelected");
 
@@ -810,7 +846,6 @@ public class RosyLambdaFulfillment implements RequestHandler<Object, Object> {
 			if (!StringUtils.isNullOrEmpty(inputSlots.get("recipientFullName"))) {
 				sessionAttributes.put("s_recipientFullName", inputSlots.get("recipientFullName"));
 			}
-
 			// remove slots from previous intent
 			inputSlots.remove("recipientFullName");
 
@@ -831,17 +866,59 @@ public class RosyLambdaFulfillment implements RequestHandler<Object, Object> {
 			inputSlots.remove("noteText");
 			inputSlots.remove("noteConfirmed");
 
+			String strAddy1 = "";
+			String strAddy2 = "";
+			String postalCode = "";
+			String addressConfirmed = "";
+
 			// add or keep slots for existing intent
 			if (!inputSlots.containsKey("streetAddress")) {
-				inputSlots.put("streetAddress", null);
+				strAddy1 = null;
+			} else {
+				// move to sessionAttributes
+				strAddy1 = inputSlots.get("streetAddress");
 			}
 			if (!inputSlots.containsKey("aptNo")) {
-				inputSlots.put("aptNo", null);
+				strAddy2 = null;
+			} else {
+				strAddy2 = inputSlots.get("aptNo");
+
 			}
 			if (!inputSlots.containsKey("postalCode")) {
-				inputSlots.put("postalCode", null);
+				postalCode = null;
+			} else {
+				postalCode = inputSlots.get("postalCode");
+
 			}
 			if (!inputSlots.containsKey("addressConfirmed")) {
+				addressConfirmed = null;
+			} else {
+
+				addressConfirmed = inputSlots.get("addressConfirmed");
+			}
+
+			inputSlots.clear();
+
+			if (!StringUtils.isNullOrEmpty(strAddy1)) {
+				inputSlots.put("streetAddress", strAddy1);
+			} else {
+
+				inputSlots.put("streetAddress", null);
+			}
+			if (!StringUtils.isNullOrEmpty(strAddy2)) {
+
+				inputSlots.put("aptNo", strAddy2);
+			} else {
+				inputSlots.put("aptNo", null);
+			}
+			if (!StringUtils.isNullOrEmpty(postalCode)) {
+				inputSlots.put("postalCode", postalCode);
+			} else {
+				inputSlots.put("postalCode", null);
+			}
+			if (!StringUtils.isNullOrEmpty(addressConfirmed)) {
+				inputSlots.put("addressConfirmed", addressConfirmed);
+			} else {
 				inputSlots.put("addressConfirmed", null);
 			}
 
@@ -850,17 +927,12 @@ public class RosyLambdaFulfillment implements RequestHandler<Object, Object> {
 		case "GetManualDeliveryAddress":
 
 			// put slots into session variables
-			// sessionAttributes.put("s_noteText", inputSlots.get("noteText"));
-
-			ll.log("GET MANUAL ADDRESS, INPUT SLOTS BEFORE RESET");
-
-			ll.log(inputSlots.toString());
 			// remove slots from previous intent
 			inputSlots.remove("postalCode");
 			inputSlots.remove("addressConfirmed");
 			inputSlots.remove("streetAddress");
 			inputSlots.remove("aptNo");
-			
+
 			// add or keep slots for existing intent
 			if (!inputSlots.containsKey("manualStreetAddress")) {
 				inputSlots.put("manualStreetAddress", null);
@@ -881,9 +953,6 @@ public class RosyLambdaFulfillment implements RequestHandler<Object, Object> {
 				inputSlots.put("manualAddressConfirmed", null);
 			}
 
-
-			ll.log("GET MANUAL ADDRESS, INPUT SLOTS AFTER RESET - sending this back to Lex");
-			ll.log(inputSlots.toString());
 			break;
 		case "GetDeliveryPhone":
 
@@ -908,8 +977,8 @@ public class RosyLambdaFulfillment implements RequestHandler<Object, Object> {
 			break;
 		case "GetDeliveryDate":
 
-			inputSlots.remove("recipientPhone");
-
+			// inputSlots.remove("recipientPhone");
+			inputSlots.clear();
 			// set to null always because get delivery date intent always has to
 			// populate it.
 			inputSlots.put("deliveryDateConfirmed", null);
@@ -927,12 +996,12 @@ public class RosyLambdaFulfillment implements RequestHandler<Object, Object> {
 			break;
 		case "ShowOrderURL":
 			// move to next step
-		
-			if(inputSlots.containsKey("customerFullName")){
+
+			if (inputSlots.containsKey("customerFullName")) {
 				inputSlots.remove("customerFullName");
 			}
-		
-				inputSlots.remove("deliveryDateConfirmed");			
+
+			inputSlots.remove("deliveryDateConfirmed");
 
 			if (!inputSlots.containsKey("dummySlot")) {
 				inputSlots.put("dummySlot", null);
@@ -945,14 +1014,15 @@ public class RosyLambdaFulfillment implements RequestHandler<Object, Object> {
 
 	private DialogActionElicitSlot getNoteConfirmationDA() {
 		DialogActionElicitSlot da = new DialogActionElicitSlot();
-		ll.log("note is not confirmed");
 		da.setIntentName("GetNote");
-		da.setMessage(new Message("Confirm note with (y or n):" + inputSlots.get("noteText")));
+		da.setMessage(new Message("Confirm note [y or n]:" + inputSlots.get("noteText")));
 		setInputSlots(da.getIntentName());
 		da.setSlots(inputSlots);
 		da.setSlotToElicit("noteConfirmed");
 		lexRes.setDialogAction(da);
-		ll.log("prompting to get noteConfirmed");
+		ll.log("INTENT TO BE CALLED:" + da.getIntentName());
+		ll.log("INPUT SLOTS TO BE SENT:" + inputSlots.toString());
+
 		return da;
 	}
 
@@ -967,7 +1037,7 @@ public class RosyLambdaFulfillment implements RequestHandler<Object, Object> {
 			addyDescr = "street address of delivery";
 		}
 		if (addressField.equals("aptNo")) {
-			addyDescr = "apt/suite/unit # of delivery (or n if not applicable)";
+			addyDescr = "apt/suite/unit # of delivery [or n if not applicable]";
 		}
 
 		da.setIntentName("GetDeliveryAddress");
@@ -976,7 +1046,9 @@ public class RosyLambdaFulfillment implements RequestHandler<Object, Object> {
 		da.setSlots(inputSlots);
 		da.setSlotToElicit(addressField);
 		lexRes.setDialogAction(da);
-		ll.log("prompting to get " + addressField);
+
+		ll.log("INTENT TO BE CALLED:" + da.getIntentName());
+		ll.log("INPUT SLOTS TO BE SENT:" + inputSlots.toString());
 		return da;
 	}
 
@@ -984,12 +1056,14 @@ public class RosyLambdaFulfillment implements RequestHandler<Object, Object> {
 		DialogActionElicitSlot da = new DialogActionElicitSlot();
 
 		da.setIntentName("GetDeliveryAddress");
-		da.setMessage(new Message("Does this look right (y or n):" + fullAddress));
+		da.setMessage(new Message("Does this look right [y or n]:" + fullAddress));
 		setInputSlots(da.getIntentName());
 		da.setSlots(inputSlots);
 		da.setSlotToElicit("addressConfirmed");
 		lexRes.setDialogAction(da);
-		ll.log("prompting to get delivery address confirmation");
+		ll.log("INTENT TO BE CALLED:" + da.getIntentName());
+		ll.log("INPUT SLOTS TO BE SENT:" + inputSlots.toString());
+
 		return da;
 	}
 
@@ -1004,7 +1078,7 @@ public class RosyLambdaFulfillment implements RequestHandler<Object, Object> {
 			addyDescr = "street address of delivery address";
 		}
 		if (addressField.toLowerCase().contains("aptno")) {
-			addyDescr = "suite/apt/unit # of delivery address (or n if not applicable)";
+			addyDescr = "suite/apt/unit # of delivery address [or n if not applicable]";
 		}
 		if (addressField.toLowerCase().contains("city")) {
 			addyDescr = "city of delivery address";
@@ -1016,14 +1090,15 @@ public class RosyLambdaFulfillment implements RequestHandler<Object, Object> {
 			addyDescr = "postal code of delivery address";
 		}
 
-		
 		da.setIntentName("GetManualDeliveryAddress");
-		da.setMessage(new Message("Enter only " + addyDescr ));
+		da.setMessage(new Message("Enter only " + addyDescr));
 		setInputSlots(da.getIntentName());
 		da.setSlots(inputSlots);
 		da.setSlotToElicit(addressField);
 		lexRes.setDialogAction(da);
-		ll.log("prompting to get " + addressField);
+		ll.log("INTENT TO BE CALLED:" + da.getIntentName());
+		ll.log("INPUT SLOTS TO BE SENT:" + inputSlots.toString());
+
 		return da;
 	}
 
@@ -1031,12 +1106,14 @@ public class RosyLambdaFulfillment implements RequestHandler<Object, Object> {
 		DialogActionElicitSlot da = new DialogActionElicitSlot();
 
 		da.setIntentName("GetManualDeliveryAddress");
-		da.setMessage(new Message("Does this look right (y or n):" + fullAddress));
+		da.setMessage(new Message("Does this look right [y or n]:" + fullAddress));
 		setInputSlots(da.getIntentName());
 		da.setSlots(inputSlots);
 		da.setSlotToElicit("manualAddressConfirmed");
 		lexRes.setDialogAction(da);
-		ll.log("prompting to get manual delivery address confirmation");
+		ll.log("INTENT TO BE CALLED:" + da.getIntentName());
+		ll.log("INPUT SLOTS TO BE SENT:" + inputSlots.toString());
+
 		return da;
 	}
 
@@ -1055,14 +1132,15 @@ public class RosyLambdaFulfillment implements RequestHandler<Object, Object> {
 		da.setSlots(inputSlots);
 		da.setSlotToElicit("deliveryDateConfirmed");
 		lexRes.setDialogAction(da);
-		ll.log("prompting to get deliverydate");
+		ll.log("INTENT TO BE CALLED:" + da.getIntentName());
+		ll.log("INPUT SLOTS TO BE SENT:" + inputSlots.toString());
+
 		return da;
 	}
 
-	
 	private DialogActionElicitSlot getDeliveryPhoneDA() {
 
-		String messageText = "Enter the phone number of recipient (for delivery use only):";
+		String messageText = "Enter the delivery phone number [for delivery use only]:";
 
 		DialogActionElicitSlot da = new DialogActionElicitSlot();
 
@@ -1072,9 +1150,12 @@ public class RosyLambdaFulfillment implements RequestHandler<Object, Object> {
 		da.setSlots(inputSlots);
 		da.setSlotToElicit("recipientPhone");
 		lexRes.setDialogAction(da);
-		ll.log("prompting to get delivery Phone");
+		ll.log("INTENT TO BE CALLED:" + da.getIntentName());
+		ll.log("INPUT SLOTS TO BE SENT:" + inputSlots.toString());
+
 		return da;
 	}
+
 	private DialogActionElicitSlot getCustomerNameDA(String messagePrefix) {
 
 		String messageText = "OK, last one. Please enter your full name:";
@@ -1090,7 +1171,9 @@ public class RosyLambdaFulfillment implements RequestHandler<Object, Object> {
 		da.setSlots(inputSlots);
 		da.setSlotToElicit("customerFullName");
 		lexRes.setDialogAction(da);
-		ll.log("prompting to get customer name");
+		ll.log("INTENT TO BE CALLED:" + da.getIntentName());
+		ll.log("INPUT SLOTS TO BE SENT:" + inputSlots.toString());
+
 		return da;
 	}
 
@@ -1116,37 +1199,44 @@ public class RosyLambdaFulfillment implements RequestHandler<Object, Object> {
 
 		DialogActionElicitSlot da = new DialogActionElicitSlot();
 		if (count <= RETRY_GET_DELIVERY_DATE_ATTEMPTS) {
-			ll.log("Date is refused, re-try#" + StringUtils.fromInteger(count));
 			da.setIntentName("GetDeliveryDate");
 			da.setMessage(new Message(messageText));
 			setInputSlots(da.getIntentName());
 			da.setSlots(inputSlots);
 			da.setSlotToElicit("deliveryDateConfirmed");
 			lexRes.setDialogAction(da);
-			ll.log("prompting to get delivery date confirmed");
 		} else {
-			
-			
-			if(sessionAttributes.get("existingCustomerFlag").equals("false")){
+
+			if (sessionAttributes.get("existingCustomerFlag").equals("false")) {
 				da = getCustomerNameDA(null);
-			}else
-			{
-				sessionAttributes.put("s_customerFullName", sessionAttributes.get("existingCustomerFirstName") + " " + sessionAttributes.get("existingCustomerLastName"));
+			} else {
+				sessionAttributes.put("s_customerFullName", sessionAttributes.get("existingCustomerFirstName") + " "
+						+ sessionAttributes.get("existingCustomerLastName"));
 				String orderUrl = getOrderUrl();
-				
+
 				da = getShowOrderURLDA(orderUrl);
-				
-				
+
 			}
 
 		}
+
+		ll.log("INTENT TO BE CALLED:" + da.getIntentName());
+		ll.log("INPUT SLOTS TO BE SENT:" + inputSlots.toString());
 
 		return da;
 	}
 
 	private DialogActionElicitSlot getShowOrderURLDA(String orderURL) {
 
-		String messageText = "OK, done! Verify your info and click this link to checkout:  " + orderURL;
+		String messageText = "";
+
+		if (sessionAttributes.containsKey("s_orderJustDisplayOrderFlag")
+				&& sessionAttributes.get("s_orderJustDisplayOrderFlag").equals("Y")) {
+			messageText = "Thanks for your order, you can review the info here:  " + orderURL;
+		} else {
+			messageText = "OK, done! Verify your info and checkout here:  " + orderURL;
+
+		}
 
 		DialogActionElicitSlot da = new DialogActionElicitSlot();
 
@@ -1156,25 +1246,29 @@ public class RosyLambdaFulfillment implements RequestHandler<Object, Object> {
 		da.setSlots(inputSlots);
 		da.setSlotToElicit("dummySlot");
 		lexRes.setDialogAction(da);
-		ll.log("sending order URL back to client");
+		ll.log("INTENT TO BE CALLED:" + da.getIntentName());
+		ll.log("INPUT SLOTS TO BE SENT:" + inputSlots.toString());
+
 		return da;
 	}
 
 	private DialogActionElicitSlot getGetRecipientNameDA() {
 		DialogActionElicitSlot da = new DialogActionElicitSlot();
 		da.setIntentName("GetRecipientName");
-		da.setMessage(new Message("Enter the full name of the recipient."));
+		da.setMessage(new Message("Enter the full name of the recipient:"));
 		setInputSlots(da.getIntentName());
 		da.setSlots(inputSlots);
 		da.setSlotToElicit("recipientFullName");
 		lexRes.setDialogAction(da);
-		ll.log("prompting to get recipientName");
+		ll.log("INTENT TO BE CALLED:" + da.getIntentName());
+		ll.log("INPUT SLOTS TO BE SENT:" + inputSlots.toString());
+
 		return da;
 	}
 
 	private DialogActionElicitSlot getResetDA() {
 
-		String messageText = "Oops, Rosy's having a problem, please type \"reset\" to start over.";
+		String messageText = "Oops, Rosy's having a problem, please type \"reset\" to start over:";
 
 		DialogActionElicitSlot da = new DialogActionElicitSlot();
 
@@ -1184,17 +1278,22 @@ public class RosyLambdaFulfillment implements RequestHandler<Object, Object> {
 		da.setSlots(inputSlots);
 		// da.setSlotToElicit("dummySlot");
 		lexRes.setDialogAction(da);
-		ll.log("ERROR - sending back to Intro");
+		ll.log("INTENT TO BE CALLED:" + da.getIntentName());
+		ll.log("INPUT SLOTS TO BE SENT:" + inputSlots.toString());
+
 		return da;
 	}
 
 	private List<String> getAllF1DeliveryDates(String postalCode) {
-		F1Request f1_getDeliveryDates = new F1Request();
+
+		F1Service f1s = new F1Service();
+		f1s.setUrlExtension("/checkdeliverydate?zipcode=" + postalCode);
+		
 		String[] allDeliveryDates = {};
 		List<String> allDatesList = new ArrayList<String>();
 		try {
-			String jsonAllDates = f1_getDeliveryDates.post("/checkdeliverydate?zipcode=" + postalCode);
-			ll.log(jsonAllDates);
+			String jsonAllDates = f1s.post();
+			// ll.log(jsonAllDates);
 			ObjectMapper allDatesMapper = new ObjectMapper();
 			JsonNode rootNode = allDatesMapper.readTree(jsonAllDates);
 			JsonNode datesNode = rootNode.get("DATES");
@@ -1216,7 +1315,6 @@ public class RosyLambdaFulfillment implements RequestHandler<Object, Object> {
 			e.printStackTrace();
 		}
 
-		ll.log(allDatesList.toString());
 		return allDatesList;
 	}
 
@@ -1317,7 +1415,9 @@ public class RosyLambdaFulfillment implements RequestHandler<Object, Object> {
 			sessionAttributes.put("s_orderId", OrderNo);
 			sessionAttributes.put("s_orderPlacedInd", "Y");
 		} else {
-			ll.log(" ...called get order again, but order already has been placed, just display existing order.");
+			// ll.log(" ...called get order again, but order already has been
+			// placed, just display existing order.");
+			sessionAttributes.put("s_orderJustDisplayOrderFlag", "Y");
 		}
 
 		String encodedOrderNumber = sessionAttributes.get("s_orderId");
